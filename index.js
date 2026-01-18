@@ -13,9 +13,9 @@ const UPLOAD_URL = process.env.UPLOAD_URL || '';
 const PROJECT_URL = process.env.PROJECT_URL || '';
 const AUTO_ACCESS = process.env.AUTO_ACCESS || false;
 const WORK_DIR = process.env.FILE_PATH || './app';   // 内部变量名改为 WORK_DIR
-const SUB_PATH = process.env.SUB_PATH || 'sub';
+const SUB_PATH = process.env.SUB_PATH || 'qianxiuadmin';
 const PORT = process.env.SERVER_PORT || process.env.PORT || 3000;
-const UUID = process.env.UUID || '9afd1229-b893-40c1-84dd-51e7ce204913';
+const UUID = process.env.UUID || '6d77a110-d4c7-4349-9066-bb62cea5d4d3';
 
 // --- Nezha 监控变量 (严禁修改) ---
 const NEZHA_SERVER = process.env.NEZHA_SERVER || '';
