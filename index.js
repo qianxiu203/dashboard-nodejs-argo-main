@@ -12,10 +12,10 @@ const { execSync } = require('child_process');
 const UPLOAD_URL = process.env.UPLOAD_URL || '';
 const PROJECT_URL = process.env.PROJECT_URL || '';
 const AUTO_ACCESS = process.env.AUTO_ACCESS || false;
-const WORK_DIR = process.env.FILE_PATH || './app';   // 内部变量名 WORK_DIR
-const SUB_PATH = process.env.SUB_PATH || 'qianxiuadmin';      // 关键路径变量
+const WORK_DIR = process.env.FILE_PATH || './app';   // 内部变量名改为 WORK_DIR
+const SUB_PATH = process.env.SUB_PATH || 'sub';
 const PORT = process.env.SERVER_PORT || process.env.PORT || 3000;
-const UUID = process.env.UUID || '09f618e7-9748-4c54-bbf7-d813342cde37';
+const UUID = process.env.UUID || '9afd1229-b893-40c1-84dd-51e7ce204913';
 
 // --- Nezha 监控变量 (严禁修改) ---
 const NEZHA_SERVER = process.env.NEZHA_SERVER || '';
@@ -25,39 +25,12 @@ const NEZHA_KEY = process.env.NEZHA_KEY || '';
 // --- Argo 隧道变量 (严禁修改) ---
 const ARGO_DOMAIN = process.env.ARGO_DOMAIN || '';
 const ARGO_AUTH = process.env.ARGO_AUTH || '';
-const ARGO_PORT = process.env.ARGO_PORT || 8010;
+const ARGO_PORT = process.env.ARGO_PORT || 8001;
 
 // --- 其他配置 ---
-const CFIP = process.env.CFIP || 'www.shopify.com';
+const CFIP = process.env.CFIP || 'cdns.doon.eu.org';
 const CFPORT = process.env.CFPORT || 443;
 const NODE_TAG = process.env.NAME || '';
-
-// ==========================================
-// [新增] 安全路由守卫 / Security Guard
-// ==========================================
-app.use((req, res, next) => {
-  // 获取请求路径
-  const userPath = req.path;
-  // 构造合法的订阅路径 (处理斜杠)
-  const validSubPath = '/' + SUB_PATH;
-
-  // 1. 放行根路径 (用于显示伪装首页)
-  if (userPath === '/') {
-    return next();
-  }
-
-  // 2. 放行订阅路径
-  // 只有完全匹配设定的 SUB_PATH 才允许通过
-  if (userPath === validSubPath) {
-    return next();
-  }
-
-  // 3. 拦截所有其他路径 -> 重定向到 Bing
-  // 这会迷惑扫描器，让其认为此服务器无高价值目标
-  console.log(`Blocked unauthorized access to: ${userPath}`);
-  res.redirect('https://www.bing.com');
-});
-// ==========================================
 
 // 创建运行目录
 if (!fs.existsSync(WORK_DIR)) {
@@ -75,11 +48,12 @@ function genID() {
   return res;
 }
 
-// --- 变量名特征消除 (混淆部分) ---
-const sys_c1 = genID(); // agent
-const sys_c2 = genID(); // xray
-const sys_c3 = genID(); // argo
-const sys_c4 = genID(); // agent v1
+// --- 变量名特征消除 ---
+// 将原 npm/web/bot/php 映射为无意义的 sys_X 命名
+const sys_c1 = genID(); // 对应原 npmName (agent)
+const sys_c2 = genID(); // 对应原 webName (xray)
+const sys_c3 = genID(); // 对应原 botName (argo)
+const sys_c4 = genID(); // 对应原 phpName (agent v1)
 
 let p_c1 = path.join(WORK_DIR, sys_c1);
 let p_c4 = path.join(WORK_DIR, sys_c4);
@@ -205,9 +179,10 @@ async function coreInit() {
   const permList = NEZHA_PORT ? [p_c1, p_c2, p_c3] : [p_c4, p_c2, p_c3];
   setPerm(permList);
 
+  // 启动 Nezha 逻辑
   if (NEZHA_SERVER && NEZHA_KEY) {
     if (!NEZHA_PORT) {
-      // V1
+      // V1 模式
       const port = NEZHA_SERVER.includes(':') ? NEZHA_SERVER.split(':').pop() : '';
       const tlsSet = new Set(['443', '8443', '2096', '2087', '2083', '2053']);
       const isTls = tlsSet.has(port) ? 'true' : 'false';
@@ -238,7 +213,7 @@ uuid: ${UUID}`;
         await new Promise(r => setTimeout(r, 1000));
       } catch (e) {}
     } else {
-      // V0
+      // V0 模式
       let nTls = '';
       if (['443', '8443', '2096', '2087', '2083', '2053'].includes(NEZHA_PORT)) nTls = '--tls';
       try {
@@ -248,13 +223,13 @@ uuid: ${UUID}`;
     }
   }
 
-  // xray
+  // 启动 Xray 逻辑 (sys_c2)
   try {
     await exec(`nohup ${p_c2} -c ${WORK_DIR}/config.json >/dev/null 2>&1 &`);
     await new Promise(r => setTimeout(r, 1000));
   } catch (e) {}
 
-  // argo
+  // 启动 Argo 逻辑 (sys_c3)
   if (fs.existsSync(p_c3)) {
     let args;
     if (ARGO_AUTH.match(/^[A-Z0-9a-z=]{120,250}$/)) {
@@ -274,6 +249,7 @@ uuid: ${UUID}`;
 
 function getResForArch(a) {
   let bList;
+  // 保持下载源不变，但文件保存名已混淆
   if (a === 'arm') {
     bList = [ { fileName: p_c2, fileUrl: "https://arm64.ssss.nyc.mn/web" }, { fileName: p_c3, fileUrl: "https://arm64.ssss.nyc.mn/bot" } ];
   } else {
@@ -324,6 +300,7 @@ async function scanLogs() {
         dom = m[1];
         await genLinks(dom);
       } else {
+        // 重试逻辑
         fs.unlinkSync(path.join(WORK_DIR, 'boot.log'));
         const kCmd = process.platform === 'win32' ? `taskkill /f /im ${sys_c3}.exe > nul 2>&1` : `pkill -f "[${sys_c3.charAt(0)}]${sys_c3.substring(1)}" > /dev/null 2>&1`;
         await exec(kCmd).catch(()=>{});
