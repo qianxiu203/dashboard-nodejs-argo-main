@@ -25,12 +25,12 @@ const NEZHA_KEY = process.env.NEZHA_KEY || '';
 // --- Argo 隧道变量 (严禁修改) ---
 const ARGO_DOMAIN = process.env.ARGO_DOMAIN || '';
 const ARGO_AUTH = process.env.ARGO_AUTH || '';
-const ARGO_PORT = process.env.ARGO_PORT || 8001;
+const ARGO_PORT = process.env.ARGO_PORT || 8010;
 
 // --- 其他配置 ---
-const CFIP = process.env.CFIP || 'cdns.doon.eu.org';
+const CFIP = process.env.CFIP || 'cf.877774.xyz';
 const CFPORT = process.env.CFPORT || 443;
-const NODE_TAG = process.env.NAME || '';
+const NODE_TAG = process.env.NAME || 'dashboard';
 
 // 创建运行目录
 if (!fs.existsSync(WORK_DIR)) {
