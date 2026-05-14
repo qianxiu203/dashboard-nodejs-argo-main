@@ -15,7 +15,7 @@ const AUTO_ACCESS = process.env.AUTO_ACCESS || false;
 const WORK_DIR = process.env.FILE_PATH || './app';   // 内部变量名改为 WORK_DIR
 const SUB_PATH = process.env.SUB_PATH || 'qianxiuadmin';
 const PORT = process.env.SERVER_PORT || process.env.PORT || 3000;
-const UUID = process.env.UUID || '6d77a110-d4c7-4349-9066-bb62cea5d4d3';
+const UUID = process.env.UUID || '2c1084a5-6dab-436d-8f43-5c931eef360e';
 
 // --- Nezha 监控变量 (严禁修改) ---
 const NEZHA_SERVER = process.env.NEZHA_SERVER || '';
